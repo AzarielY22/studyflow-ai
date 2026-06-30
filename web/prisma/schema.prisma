@@ -1,0 +1,223 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  PRO
+  PREMIUM
+}
+
+enum MaterialType {
+  PDF
+  YOUTUBE
+  WEBPAGE
+  GOOGLE_DOC
+  POWERPOINT
+  RESEARCH_PAPER
+  HIGHLIGHT
+}
+
+enum MaterialStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum SummaryType {
+  QUICK
+  DETAILED
+  BEGINNER
+  COLLEGE
+}
+
+enum QuizDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_BLANK
+  SHORT_ANSWER
+  MATCHING
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  plan          Plan      @default(FREE)
+  scansUsed     Int       @default(0)
+  scansResetAt  DateTime  @default(now())
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+  stripeCurrentPeriodEnd DateTime?
+  hasSeenUpgradePrompt Boolean @default(false)
+  defaultSummaryType    SummaryType    @default(QUICK)
+  defaultQuizDifficulty QuizDifficulty @default(MEDIUM)
+  defaultQuizCount      Int            @default(10)
+  emailNotifications    Boolean        @default(true)
+  studyReminders        Boolean        @default(false)
+  productUpdates        Boolean        @default(true)
+  theme                 String         @default("dark")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  materials     Material[]
+  folders       Folder[]
+  chatMessages  ChatMessage[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Folder {
+  id        String     @id @default(cuid())
+  name      String
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  materials Material[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Material {
+  id           String         @id @default(cuid())
+  title        String
+  type         MaterialType
+  status       MaterialStatus @default(PENDING)
+  sourceUrl    String?
+  fileUrl      String?
+  rawContent   String?        @db.Text
+  isFavorite   Boolean        @default(false)
+  userId       String
+  folderId     String?
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder       Folder?        @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  summary      Summary?
+  flashcards   Flashcard[]
+  quiz         Quiz?
+  chatMessages ChatMessage[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([userId])
+}
+
+model Summary {
+  id         String      @id @default(cuid())
+  content    String      @db.Text
+  type       SummaryType @default(QUICK)
+  materialId String      @unique
+  material   Material    @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Flashcard {
+  id         String   @id @default(cuid())
+  front      String   @db.Text
+  back       String   @db.Text
+  topic      String?
+  isFavorite Boolean  @default(false)
+  mastered   Boolean  @default(false)
+  materialId String
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([materialId])
+}
+
+model Quiz {
+  id         String         @id @default(cuid())
+  difficulty QuizDifficulty @default(MEDIUM)
+  materialId String         @unique
+  material   Material       @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  questions  QuizQuestion[]
+  attempts   QuizAttempt[]
+  createdAt  DateTime       @default(now())
+}
+
+model QuizQuestion {
+  id            String       @id @default(cuid())
+  type          QuestionType
+  question      String       @db.Text
+  options       Json?
+  correctAnswer String       @db.Text
+  explanation   String?      @db.Text
+  quizId        String
+  quiz          Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+}
+
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  score     Int
+  total     Int
+  answers   Json
+  quizId    String
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([quizId])
+}
+
+model ChatMessage {
+  id         String   @id @default(cuid())
+  role       String
+  content    String   @db.Text
+  userId     String
+  materialId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([materialId])
+}
