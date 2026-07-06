@@ -1,16 +1,33 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { status } = useSession();
   const fromExtension = searchParams.get("extension") === "true";
   const callbackUrl = fromExtension ? "/extension/callback" : "/dashboard";
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace(callbackUrl);
+    }
+  }, [status, router, callbackUrl]);
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="gradient-bg flex min-h-screen items-center justify-center">
+        <p className="text-zinc-400">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="gradient-bg flex min-h-screen items-center justify-center px-4">

@@ -12,7 +12,7 @@ export const authConfig = {
     signIn: "/login",
     newUser: "/dashboard",
   },
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
   Brain, FileText, Globe, MessageSquare, Sparkles, Video, Zap,
@@ -20,6 +21,9 @@ const features = [
 ];
 
 export default function HomePage() {
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated" && !!session?.user;
+
   return (
     <div className="gradient-bg min-h-screen">
       <Navbar />
@@ -46,9 +50,15 @@ export default function HomePage() {
               generate everything you need to study smarter.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/login">
-                <Button size="lg" className="min-w-[160px]">Start Free</Button>
-              </Link>
+              {isAuthenticated ? (
+                <Link href="/dashboard">
+                  <Button size="lg" className="min-w-[160px]">Go to Dashboard</Button>
+                </Link>
+              ) : (
+                <Link href="/login">
+                  <Button size="lg" className="min-w-[160px]">Start Free</Button>
+                </Link>
+              )}
               <Link href="#extension">
                 <Button variant="secondary" size="lg" className="min-w-[160px]">
                   <Globe className="h-4 w-4" />
@@ -141,9 +151,15 @@ export default function HomePage() {
         <section className="mx-auto max-w-3xl px-4 py-24 text-center sm:px-6">
           <h2 className="text-3xl font-bold">Ready to study smarter?</h2>
           <p className="mt-4 text-zinc-400">Join thousands of students saving hours every week.</p>
-          <Link href="/login">
-            <Button size="lg" className="mt-8">Get Started Free</Button>
-          </Link>
+          {isAuthenticated ? (
+            <Link href="/dashboard">
+              <Button size="lg" className="mt-8">Go to Dashboard</Button>
+            </Link>
+          ) : (
+            <Link href="/login">
+              <Button size="lg" className="mt-8">Get Started Free</Button>
+            </Link>
+          )}
         </section>
       </main>
 
