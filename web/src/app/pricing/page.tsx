@@ -17,9 +17,11 @@ const plans = [
 
 export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCheckout = async (plan: "PRO" | "PREMIUM") => {
     setLoading(plan);
+    setError(null);
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -27,7 +29,14 @@ export default function PricingPage() {
         body: JSON.stringify({ plan }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Checkout failed. Please try again.");
+        return;
+      }
       if (data.url) window.location.href = data.url;
+      else setError("Checkout could not be started.");
+    } catch {
+      setError("Network error. Please try again.");
     } finally {
       setLoading(null);
     }
@@ -40,6 +49,11 @@ export default function PricingPage() {
         <div className="text-center">
           <h1 className="text-4xl font-bold">Simple, transparent pricing</h1>
           <p className="mt-4 text-zinc-400">Start free. Upgrade when you need more.</p>
+          {error && (
+            <p className="mx-auto mt-4 max-w-xl rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {error}
+            </p>
+          )}
         </div>
         <div className="mt-16 grid gap-8 lg:grid-cols-3">
           {plans.map((plan) => (

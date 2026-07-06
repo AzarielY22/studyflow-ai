@@ -14,9 +14,11 @@ interface UpgradeModalProps {
 
 export function UpgradeModal({ open, onDismiss }: UpgradeModalProps) {
   const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCheckout = async (plan: "PRO" | "PREMIUM") => {
     setLoading(plan);
+    setError(null);
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -24,7 +26,14 @@ export function UpgradeModal({ open, onDismiss }: UpgradeModalProps) {
         body: JSON.stringify({ plan }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Checkout failed. Please try again.");
+        return;
+      }
       if (data.url) window.location.href = data.url;
+      else setError("Checkout could not be started.");
+    } catch {
+      setError("Network error. Please try again.");
     } finally {
       setLoading(null);
     }
@@ -66,6 +75,11 @@ export function UpgradeModal({ open, onDismiss }: UpgradeModalProps) {
                   <p className="mx-auto mt-2 max-w-md text-zinc-400">
                     You&apos;re on the Free plan. Upgrade now for unlimited scans, AI chat, and more study power.
                   </p>
+                  {error && (
+                    <p className="mx-auto mt-4 max-w-md rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                      {error}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-3">
