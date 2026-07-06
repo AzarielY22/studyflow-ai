@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
       studyReminders: true,
       productUpdates: true,
       theme: true,
+      stripeCustomerId: true,
       _count: { select: { materials: true, folders: true } },
     },
   });
@@ -32,9 +33,12 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const limits = getPlanLimits(user.plan);
+  const scansRemaining =
+    limits.scans === Infinity ? Infinity : Math.max(0, limits.scans - user.scansUsed);
 
   return NextResponse.json({
     ...user,
+    scansRemaining: scansRemaining === Infinity ? "unlimited" : scansRemaining,
     limits: {
       scans: limits.scans === Infinity ? "unlimited" : limits.scans,
       flashcards: limits.flashcards === Infinity ? "unlimited" : limits.flashcards,
