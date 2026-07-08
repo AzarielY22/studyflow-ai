@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent } from "@/components/ui/card";
+import { CHROME_EXTENSION_URL } from "@/lib/site";
 
 export default function SupportPage() {
   return (
@@ -11,7 +12,23 @@ export default function SupportPage() {
         <p className="mt-4 text-zinc-400">We&apos;re here to help you study smarter.</p>
         <div className="mt-12 space-y-4">
           {[
-            { q: "How do I install the Chrome extension?", a: "Visit the Chrome Web Store and click 'Add to Chrome'. Sign in with your Google account to sync with your dashboard." },
+            {
+              q: "How do I install the Chrome extension?",
+              a: (
+                <>
+                  Install from the{" "}
+                  <a
+                    href={CHROME_EXTENSION_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-400 hover:underline"
+                  >
+                    Chrome Web Store
+                  </a>
+                  , then sign in with your StudyFlow account to sync with your dashboard.
+                </>
+              ),
+            },
             { q: "What file types are supported?", a: "PDFs, YouTube videos, Google Docs, PowerPoints, research papers, educational websites, and highlighted text from any webpage." },
             { q: "How do I upgrade my plan?", a: "Go to Billing in your dashboard or visit our Pricing page to upgrade to Pro or Premium." },
             { q: "Can I cancel anytime?", a: "Yes. Manage your subscription through the Stripe Customer Portal from your Billing page." },
@@ -26,8 +43,8 @@ export default function SupportPage() {
         </div>
         <p className="mt-8 text-center text-zinc-400">
           Still need help? Email{" "}
-          <a href="mailto:support@studyflow.ai" className="text-indigo-400 hover:underline">
-            support@studyflow.ai
+          <a href="mailto:support@getstudyflow.online" className="text-indigo-400 hover:underline">
+            support@getstudyflow.online
           </a>
         </p>
       </main>
